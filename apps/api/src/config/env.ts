@@ -1,6 +1,5 @@
-import path from "path";
-
 import dotenv from "dotenv";
+import path from "path";
 import { z } from "zod";
 
 // Load environment variables from .env file
@@ -56,6 +55,9 @@ const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_S3_BUCKET: z.string().optional(),
   AWS_REGION: z.string().optional(),
+
+  // ─── Gemini API (Phase 7) ──────────────────────────────────────────────────
+  GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required for AI features"),
 });
 
 type Env = z.infer<typeof envSchema>;

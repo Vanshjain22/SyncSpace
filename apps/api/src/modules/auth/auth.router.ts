@@ -1,19 +1,10 @@
 import { Router } from "express";
 
-import { 
-  register, 
-  login, 
-  logout, 
-  refresh, 
-  me 
-} from "./auth.controller";
-import { 
-  validateRegister, 
-  validateLogin 
-} from "./auth.validator";
-
 import { authenticate } from "@/middlewares/authenticate";
 import { authRateLimiter } from "@/middlewares/rateLimiter";
+
+import { changePassword, login, logout, me, refresh, register, updateMe } from "./auth.controller";
+import { validateLogin, validateRegister } from "./auth.validator";
 
 const router = Router();
 
@@ -25,5 +16,7 @@ router.post("/refresh", refresh);
 
 // Protected profile endpoint
 router.get("/me", authenticate, me);
+router.patch("/me", authenticate, updateMe);
+router.post("/change-password", authenticate, changePassword);
 
 export { router as authRouter };

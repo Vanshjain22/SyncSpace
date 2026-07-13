@@ -74,3 +74,27 @@ export async function remove(req: Request, res: Response, next: NextFunction): P
     next(error);
   }
 }
+
+export async function uploadLogo(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) {
+      next(new UnauthorizedError());
+      return;
+    }
+    if (!req.file) {
+      next(new BadRequestError("No file was uploaded"));
+      return;
+    }
+    const result = await fileService.uploadLogo(req.file);
+    if (result.isErr()) {
+      next(result.error);
+      return;
+    }
+    res.status(201).json({
+      success: true,
+      data: result.value,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

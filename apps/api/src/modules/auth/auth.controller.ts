@@ -1,10 +1,11 @@
-import { JWT } from "@syncspace/shared";
-import { type NextFunction, type Request, type Response, type CookieOptions } from "express";
+import { type CookieOptions, type NextFunction, type Request, type Response } from "express";
 
-import { AuthService } from "./auth.service";
+import { JWT } from "@syncspace/shared";
 
 import { env } from "@/config/env";
 import { UnauthorizedError } from "@/core/errors/HttpErrors";
+
+import { AuthService } from "./auth.service";
 
 const authService = new AuthService();
 
@@ -145,6 +146,67 @@ export async function me(req: Request, res: Response, next: NextFunction): Promi
       success: true,
       data: {
         user: result.value,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateMe(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    if (!req.user) {
+      next(new UnauthorizedError("Authentication is required"));
+      return;
+    }
+
+    const { name } = req.body as { name?: string };
+    if (!name || name.trim().length < 2) {
+      res.status(400).json({
+        success: false,
+        error: { message: "Name must be at least 2 characters long" },
+      });
+      return;
+    }
+
+    const result = await authService.updateProfile(req.user.sub, name.trim());
+    if (result.isErr()) {
+      next(result.error);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: result.value,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function changePassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) {
+      next(new UnauthorizedError("Authentication is required"));
+      return;
+    }
+
+    const result = await authService.changePassword(req.user.sub, req.body);
+    if (result.isErr()) {
+      next(result.error);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: "Password changed successfully",
       },
     });
   } catch (error) {

@@ -9,6 +9,7 @@ const updateOrganizationSchema = z.object({
   slug: z.string().min(2).max(64).optional(),
   description: z.string().max(500).optional().nullable(),
   website: z.string().url().max(100).optional().nullable(),
+  logoUrl: z.string().max(500).optional().nullable(),
 });
 
 export const validateCreateOrganization = validate({ body: createOrganizationSchema });

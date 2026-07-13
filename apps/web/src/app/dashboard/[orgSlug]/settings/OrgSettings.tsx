@@ -39,6 +39,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -106,6 +114,7 @@ const orgUpdateSchema = z.object({
     .optional()
     .or(z.literal("")),
   website: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  logoUrl: z.string().optional().or(z.literal("")),
 });
 
 type OrgUpdateValues = z.infer<typeof orgUpdateSchema>;
@@ -116,7 +125,65 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
 
   const queryClient = useQueryClient();
   const { setCurrentOrganization } = useOrgStore();
-  const { user: currentUser } = useAuthStore();
+  const { user: currentUser, setUser } = useAuthStore();
+
+  // Profile & Password & Billing States
+  const [userName, setUserName] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const [showBillingModal, setShowBillingModal] = useState(false);
+
+  useEffect(() => {
+    if (currentUser) {
+      setUserName(currentUser.name);
+    }
+  }, [currentUser]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await api.patch<{ data: { user: any } }>("/auth/me", { name });
+      return res.data.user;
+    },
+    onSuccess: (updatedUser) => {
+      setUser(updatedUser);
+      setProfileSuccess("Profile name updated successfully.");
+      setProfileError(null);
+    },
+    onError: (err) => {
+      setProfileError(getApiErrorMessage(err));
+      setProfileSuccess(null);
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async () => {
+      if (newPassword !== confirmPassword) {
+        throw new Error("New passwords do not match.");
+      }
+      await api.post("/auth/change-password", {
+        currentPassword,
+        newPassword,
+      });
+    },
+    onSuccess: () => {
+      setPasswordSuccess("Password updated successfully.");
+      setPasswordError(null);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (err: any) => {
+      setPasswordError(err.message || getApiErrorMessage(err));
+      setPasswordSuccess(null);
+    },
+  });
 
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -178,6 +245,7 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
       name: "",
       description: "",
       website: "",
+      logoUrl: "",
     },
   });
 
@@ -187,6 +255,7 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
         name: org.name || "",
         description: org.description || "",
         website: org.website || "",
+        logoUrl: org.logoUrl || "",
       });
     }
   }, [org, form]);
@@ -226,7 +295,7 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
   // ─── Mutations ─────────────────────────────────────────────────────────────
 
   const updateOrgMutation = useMutation({
-    mutationFn: async (values: OrgUpdateValues) => {
+    mutationFn: async (values: Partial<OrgUpdateValues>) => {
       const res = await api.patch<{ data: Organization }>(`/organizations/${orgId}`, values);
       return res.data;
     },
@@ -289,6 +358,41 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
     setGeneralError(null);
     setGeneralSuccess(null);
     updateOrgMutation.mutate(values);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setGeneralError("Logo image size must be under 10MB");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setGeneralError(null);
+      setGeneralSuccess(null);
+
+      const uploadRes = await api.post<ApiResponse<{ url: string }>>(
+        "/files/upload/logo",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      const uploadedUrl = uploadRes.data.url;
+      updateOrgMutation.mutate({ logoUrl: uploadedUrl });
+    } catch (err) {
+      setGeneralError("Logo upload failed: " + getApiErrorMessage(err));
+    }
   };
 
   const handleSendInvite = (e: React.FormEvent) => {
@@ -594,14 +698,33 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         <span className="text-xs text-[#94a3b8] font-bold">
                           Customize corporate avatars
                         </span>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-white/5 bg-white/5 text-xs text-white"
-                        >
-                          <Upload className="w-4 h-4 mr-1.5" /> Upload Brand Logo
-                        </Button>
+                        <div className="flex items-center gap-3">
+                          {org?.logoUrl && (
+                            <img
+                              src={org.logoUrl}
+                              alt="Brand Preview"
+                              className="h-8 w-8 rounded-lg object-cover border border-white/10"
+                            />
+                          )}
+                          <input
+                            type="file"
+                            id="org-logo-upload-input"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            disabled={updateOrgMutation.isPending}
+                          />
+                          <label htmlFor="org-logo-upload-input" className="cursor-pointer">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="border-white/5 bg-white/5 text-xs text-white pointer-events-none"
+                            >
+                              <Upload className="w-4 h-4 mr-1.5" /> Upload Brand Logo
+                            </Button>
+                          </label>
+                        </div>
                       </div>
                     </form>
                   </Form>
@@ -1164,6 +1287,22 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                   </h3>
 
                   <div className="space-y-6">
+                    {profileSuccess && (
+                      <Alert className="mb-2 bg-[#10b981]/10 border-[#10b981]/25 text-[#10b981] py-2 px-3">
+                        <AlertDescription className="text-xs font-bold">
+                          {profileSuccess}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {profileError && (
+                      <Alert variant="destructive" className="mb-2 py-2 px-3">
+                        <AlertDescription className="text-xs font-bold">
+                          {profileError}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="flex items-center gap-4.5">
                       <div className="h-16 w-16 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[#10b981] font-black text-xl shadow-inner">
                         {currentUser?.name?.[0]?.toUpperCase() || "?"}
@@ -1183,11 +1322,25 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         <Label className="text-[#94a3b8] uppercase tracking-wider text-xs font-bold">
                           User Name
                         </Label>
-                        <Input
-                          value={currentUser?.name || ""}
-                          disabled
-                          className="bg-white/[0.02] border-white/5 text-slate-300 font-bold"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            disabled={updateProfileMutation.isPending}
+                            className="bg-white/[0.02] border-white/5 text-slate-300 font-bold focus:border-[#10b981]/60 h-11"
+                          />
+                          {userName !== currentUser?.name && userName.trim().length >= 2 && (
+                            <Button
+                              onClick={() => updateProfileMutation.mutate(userName)}
+                              disabled={updateProfileMutation.isPending}
+                              variant="primary"
+                              size="sm"
+                              className="h-11 px-4 text-xs font-bold shadow-sm"
+                            >
+                              {updateProfileMutation.isPending ? "Saving..." : "Save"}
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-[#94a3b8] uppercase tracking-wider text-xs font-bold">
@@ -1196,7 +1349,7 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         <Input
                           value={currentUser?.email || ""}
                           disabled
-                          className="bg-white/[0.02] border-white/5 text-slate-300 font-bold"
+                          className="bg-white/[0.02] border-white/5 text-slate-500 font-bold h-11 cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -1225,12 +1378,36 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      alert(
-                        "Local password updates are enabled. Backend updates require authentication provider setup.",
-                      );
+                      setPasswordError(null);
+                      setPasswordSuccess(null);
+                      if (newPassword.length < 6) {
+                        setPasswordError("New password must be at least 6 characters long.");
+                        return;
+                      }
+                      if (newPassword !== confirmPassword) {
+                        setPasswordError("New passwords do not match.");
+                        return;
+                      }
+                      changePasswordMutation.mutate();
                     }}
                     className="space-y-4.5"
                   >
+                    {passwordSuccess && (
+                      <Alert className="bg-[#10b981]/10 border-[#10b981]/25 text-[#10b981] py-2 px-3">
+                        <AlertDescription className="text-xs font-bold">
+                          {passwordSuccess}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {passwordError && (
+                      <Alert variant="destructive" className="py-2 px-3">
+                        <AlertDescription className="text-xs font-bold">
+                          {passwordError}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     <div className="space-y-1.5">
                       <Label className="text-[#94a3b8] uppercase tracking-wider text-xs font-bold">
                         Current Password
@@ -1239,7 +1416,10 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         type="password"
                         placeholder="••••••••"
                         required
-                        className="bg-white/[0.01] border-white/5 focus:border-emerald-500/50"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        disabled={changePasswordMutation.isPending}
+                        className="bg-white/[0.01] border-white/5 focus:border-[#10b981]/60 h-11"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1250,7 +1430,10 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         type="password"
                         placeholder="••••••••"
                         required
-                        className="bg-white/[0.01] border-white/5 focus:border-emerald-500/50"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        disabled={changePasswordMutation.isPending}
+                        className="bg-white/[0.01] border-white/5 focus:border-[#10b981]/60 h-11"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1261,15 +1444,19 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                         type="password"
                         placeholder="••••••••"
                         required
-                        className="bg-white/[0.01] border-white/5 focus:border-emerald-500/50"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={changePasswordMutation.isPending}
+                        className="bg-white/[0.01] border-white/5 focus:border-[#10b981]/60 h-11"
                       />
                     </div>
                     <Button
                       type="submit"
                       variant="primary"
+                      disabled={changePasswordMutation.isPending}
                       className="h-9 px-4.5 text-xs font-bold shadow-sm"
                     >
-                      Update Password
+                      {changePasswordMutation.isPending ? "Updating..." : "Update Password"}
                     </Button>
                   </form>
                 </Card>
@@ -1348,16 +1535,16 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
 
                     <div className="flex items-center gap-3 border-t border-white/5 pt-4.5">
                       <Button
-                        onClick={() => alert("Redirecting to subscription billing panel...")}
+                        onClick={() => setShowBillingModal(true)}
                         variant="primary"
-                        className="h-9 px-4.5 text-xs font-bold shadow-sm"
+                        className="h-9 px-4.5 text-xs font-bold shadow-sm cursor-pointer"
                       >
                         Upgrade Tier
                       </Button>
                       <Button
-                        onClick={() => alert("Opening Stripe dashboard overlay...")}
+                        onClick={() => setShowBillingModal(true)}
                         variant="outline"
-                        className="h-9 px-4.5 text-xs font-bold border-white/5 hover:bg-white/5 text-zinc-300 hover:text-white"
+                        className="h-9 px-4.5 text-xs font-bold border-white/5 hover:bg-white/5 text-zinc-300 hover:text-white cursor-pointer"
                       >
                         Manage Subscription
                       </Button>
@@ -1500,9 +1687,17 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                   </div>
 
                   <div className="flex flex-col items-center text-center space-y-3 py-2">
-                    <div className="h-16 w-16 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-                      {org.name[0]?.toUpperCase()}
-                    </div>
+                    {org.logoUrl ? (
+                      <img
+                        src={org.logoUrl}
+                        alt={`${org.name} Logo`}
+                        className="h-16 w-16 rounded-3xl object-cover shadow-[0_0_20px_rgba(16,185,129,0.2)] border border-white/10"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 flex items-center justify-center font-black text-2xl shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                        {org.name[0]?.toUpperCase()}
+                      </div>
+                    )}
                     <div>
                       <h4 className="text-base font-extrabold text-white">{org.name}</h4>
                       <Badge
@@ -1583,7 +1778,12 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
                     You are utilizing 12% of your monthly seat quotas. Upgrade to unlock unlimited
                     file storage.
                   </p>
-                  <Button size="sm" variant="primary" className="w-full text-xs font-bold h-9">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => setShowBillingModal(true)}
+                    className="w-full text-xs font-bold h-9 cursor-pointer"
+                  >
                     Upgrade Workspace
                   </Button>
                 </Card>
@@ -1631,6 +1831,70 @@ export function OrgSettings({ paramsPromise }: OrgSettingsProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Stripe Billing Portal Simulator Modal */}
+      <Dialog open={showBillingModal} onOpenChange={setShowBillingModal}>
+        <DialogContent className="border border-white/5 bg-[#0f1c25] text-white rounded-3xl max-w-md shadow-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-extrabold uppercase tracking-wider text-white flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-[#10b981]" />
+              Stripe Billing Simulator
+            </DialogTitle>
+            <DialogDescription className="text-sm text-[#94a3b8] mt-2 font-medium">
+              You are running SyncSpace in local development mode. Payment and subscription gateways
+              are sandboxed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="rounded-2xl border border-white/5 bg-[#071017]/40 p-4 space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-bold text-zinc-300">Mock Plan Tier:</span>
+                <span className="text-[#10b981] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs">
+                  Pro Enterprise
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-bold text-zinc-300">Simulated Price:</span>
+                <span className="text-white font-extrabold">$29.00 / month</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-bold text-zinc-300">Payment Status:</span>
+                <span className="text-emerald-400 font-extrabold flex items-center gap-1">
+                  Active (Development)
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
+              In a production environment, this triggers a Stripe Checkout flow or redirects the
+              user to the Stripe Billing Customer Portal.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setShowBillingModal(false)}
+              className="h-10 text-xs font-bold border-white/5 bg-white/5 hover:bg-white/10 text-white cursor-pointer"
+            >
+              Close Portal
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setShowBillingModal(false);
+                alert(
+                  "Simulated upgrade complete! Workspace tier has been bumped to Pro Enterprise.",
+                );
+              }}
+              className="h-10 text-xs font-bold shadow-sm cursor-pointer"
+            >
+              Simulate Upgrade
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

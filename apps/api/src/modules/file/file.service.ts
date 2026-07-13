@@ -86,4 +86,12 @@ export class FileService {
 
     return Result.ok(undefined);
   }
+
+  /**
+   * Upload an organization logo.
+   */
+  async uploadLogo(file: Express.Multer.File): AsyncResult<{ url: string }> {
+    const uploadResult = await storageProvider.upload(file, "logos");
+    return Result.ok({ url: uploadResult.url });
+  }
 }

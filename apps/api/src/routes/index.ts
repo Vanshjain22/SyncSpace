@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { aiRouter } from "@/modules/ai/ai.router";
 import { analyticsRouter } from "@/modules/analytics/analytics.router";
 import { authRouter } from "@/modules/auth/auth.router";
 import { boardRouter } from "@/modules/board/board.router";
@@ -45,6 +46,7 @@ router.use("/comments", commentRouter);
 router.use("/files", fileRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/search", searchRouter);
+router.use("/ai", aiRouter);
 
 // ─── Notifications (Phase 8) ──────────────────────────────────────────────────
 router.use("/notifications", notificationRouter);

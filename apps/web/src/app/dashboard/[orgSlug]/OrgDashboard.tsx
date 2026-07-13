@@ -247,7 +247,7 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
       <HeroBanner orgSlug={org.slug} bannerOpen={bannerOpen} onClose={() => setBannerOpen(false)} />
 
       {/* Quick Actions Panel */}
-      <div className="space-y-2.5 mt-2">
+      <div className="space-y-2.5 mt-2 md:hidden">
         <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block select-none">
           Quick Actions
         </span>

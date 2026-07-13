@@ -185,6 +185,59 @@ export class AuthService {
   }
 
   /**
+   * Update the user profile name.
+   */
+  async updateProfile(userId: string, name: string): AsyncResult<UserPublic> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return Result.err(new NotFoundError("User"));
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { name },
+    });
+
+    return Result.ok(this.mapToUserPublic(updated));
+  }
+
+  /**
+   * Change user password.
+   */
+  async changePassword(
+    userId: string,
+    input: { currentPassword?: string; newPassword?: string },
+  ): AsyncResult<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return Result.err(new NotFoundError("User"));
+    }
+
+    if (!input.currentPassword || !input.newPassword) {
+      return Result.err(new UnauthorizedError("Current password and new password are required"));
+    }
+
+    const isPasswordValid = await comparePassword(input.currentPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      return Result.err(new UnauthorizedError("Invalid current password"));
+    }
+
+    const passwordHash = await hashPassword(input.newPassword);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    return Result.ok(undefined);
+  }
+
+  /**
    * Helper to map Prisma User to UserPublic shape.
    */
   private mapToUserPublic(user: any): UserPublic {

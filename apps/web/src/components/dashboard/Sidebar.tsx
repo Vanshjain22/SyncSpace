@@ -19,6 +19,7 @@ import {
   LogOut,
   Plus,
   Settings,
+  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -106,6 +107,7 @@ export function Sidebar({
     { icon: Users, label: "Team Members", path: "/settings" },
     { icon: CheckCircle, label: "Completed Tasks", path: "/analytics" },
     { icon: BarChart3, label: "Productivity", path: "/analytics" },
+    { icon: Sparkles, label: "AI Assistant", path: "/ai-report" },
   ];
 
   const secondaryNavItems = [

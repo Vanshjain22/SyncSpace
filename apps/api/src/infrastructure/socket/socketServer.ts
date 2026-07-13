@@ -1,6 +1,5 @@
-import { Server } from "socket.io";
-
 import type http from "http";
+import { Server } from "socket.io";
 
 import { env } from "@/config/env";
 import { prisma } from "@/infrastructure/database/prismaClient";
@@ -33,21 +32,28 @@ export function initSocketServer(server: http.Server): Server {
       const payload = verifyAccessToken(jwtToken);
       (socket as any).user = payload;
       next();
-    } catch (err) {
+    } catch {
       next(new Error("Invalid or expired session token"));
     }
   });
 
   io.on("connection", (socket) => {
     const authUser = (socket as any).user;
-    logger.info({ socketId: socket.id, userId: authUser.sub }, "🔌 Client connected and authenticated to Socket.io");
+    logger.info(
+      { socketId: socket.id, userId: authUser.sub },
+      "🔌 Client connected and authenticated to Socket.io",
+    );
 
     // Client rooms bindings with authorization checks
     socket.on("join-task", async (taskId: string) => {
       try {
         const task = await prisma.task.findUnique({
           where: { id: taskId },
-          select: { column: { select: { board: { select: { project: { select: { organizationId: true } } } } } } },
+          select: {
+            column: {
+              select: { board: { select: { project: { select: { organizationId: true } } } } },
+            },
+          },
         });
 
         if (!task) {
@@ -84,7 +90,10 @@ export function initSocketServer(server: http.Server): Server {
 
     socket.on("join-user", (userId: string) => {
       if (userId !== authUser.sub) {
-        logger.warn({ socketId: socket.id, userId, callerId: authUser.sub }, "Unauthorized user room subscription attempt");
+        logger.warn(
+          { socketId: socket.id, userId, callerId: authUser.sub },
+          "Unauthorized user room subscription attempt",
+        );
         return;
       }
 
@@ -137,7 +146,10 @@ export function initSocketServer(server: http.Server): Server {
     });
 
     socket.on("disconnect", () => {
-      logger.info({ socketId: socket.id, userId: authUser.sub }, "🔌 Client disconnected from Socket.io");
+      logger.info(
+        { socketId: socket.id, userId: authUser.sub },
+        "🔌 Client disconnected from Socket.io",
+      );
     });
   });
 

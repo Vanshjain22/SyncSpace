@@ -4,7 +4,7 @@ import multer from "multer";
 import { authenticate } from "@/middlewares/authenticate";
 import { authorize } from "@/middlewares/authorize";
 
-import { list, remove, upload } from "./file.controller";
+import { list, remove, upload, uploadLogo } from "./file.controller";
 
 const router = Router();
 
@@ -22,6 +22,7 @@ router.post(
   uploadMiddleware.single("file"),
   upload,
 );
+router.post("/upload/logo", authenticate, uploadMiddleware.single("file"), uploadLogo);
 router.get("/task/:taskId", authenticate, authorize(), list);
 router.delete("/:id", authenticate, authorize(), remove);
 

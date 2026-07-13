@@ -308,15 +308,26 @@ export function AnalyticsDashboard({ paramsPromise }: AnalyticsDashboardProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 px-3 border-white/5 bg-[#0f1c25]/30 hover:bg-[#0f1c25]/60 hover:text-white transition-all text-xs font-bold"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.print();
+                  }
+                }}
+                className="h-9 px-3 border-white/5 bg-[#0f1c25]/30 hover:bg-[#0f1c25]/60 hover:text-white transition-all text-xs font-bold cursor-pointer"
               >
                 <Download className="h-4 w-4 mr-1.5" />
                 Export PDF
               </Button>
-              <Button variant="primary" size="sm" className="h-9 px-3.5 text-xs font-bold">
-                <Brain className="h-4 w-4 mr-1.5 text-zinc-950" />
-                Generate AI Report
-              </Button>
+              <Link href={`/dashboard/${orgSlug}/ai-report`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="h-9 px-3.5 text-xs font-bold cursor-pointer"
+                >
+                  <Brain className="h-4 w-4 mr-1.5 text-zinc-950" />
+                  Generate AI Report
+                </Button>
+              </Link>
             </div>
           </div>
 

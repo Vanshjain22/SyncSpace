@@ -45,7 +45,8 @@ export const authApi = {
   /**
    * Get the profile of the current authenticated user.
    */
-  async me(): Promise<ApiResponse<{ user: UserPublic }>> {
-    return api.get<ApiResponse<{ user: UserPublic }>>("/auth/me");
+  async me(token?: string): Promise<ApiResponse<{ user: UserPublic }>> {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    return api.get<ApiResponse<{ user: UserPublic }>>("/auth/me", config);
   },
 };
