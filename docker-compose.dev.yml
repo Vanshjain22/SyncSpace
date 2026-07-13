@@ -1,0 +1,30 @@
+version: "3.9"
+
+# Development overrides — hot reload, no app containers (run locally)
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: syncspace
+      POSTGRES_PASSWORD: syncspace_password
+      POSTGRES_DB: syncspace_dev
+
+  redis:
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    # No password in dev for simplicity
+    environment:
+      - REDIS_PASSWORD=
+
+  # Override api + web to not build in dev — run locally instead
+  api:
+    profiles:
+      - production
+
+  web:
+    profiles:
+      - production
