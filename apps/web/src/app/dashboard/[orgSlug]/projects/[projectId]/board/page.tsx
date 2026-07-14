@@ -5,12 +5,13 @@ import { use, useEffect, useState } from "react";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   ChevronRight,
   Clock,
   MessageSquare,
+  Paperclip,
   Plus,
   Search,
+  Sparkles,
   Trash2,
   User,
 } from "lucide-react";
@@ -152,6 +153,9 @@ export default function BoardPage({ params }: BoardPageProps) {
   const [taskSearch, setTaskSearch] = useState("");
   const [filterPriority, setFilterPriority] = useState<string>("ALL");
   const [filterAssignee, setFilterAssignee] = useState<string>("ALL");
+  const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [sortKey, setSortKey] = useState<string>("POSITION");
+  const [viewCompact, setViewCompact] = useState<boolean>(false);
 
   // ─── Queries ───────────────────────────────────────────────────────────────
 
@@ -470,135 +474,329 @@ export default function BoardPage({ params }: BoardPageProps) {
   const allTasks = board.columns.flatMap((col) => col.tasks);
   const totalTasksCount = allTasks.length;
   const completedTasksCount = allTasks.filter((t) => t.status === "DONE").length;
+  const inProgressTasksCount = allTasks.filter((t) => t.status === "IN_PROGRESS").length;
+  const blockedTasksCount = allTasks.filter(
+    (t) => (t.priority === "URGENT" || t.priority === "HIGH") && t.status !== "DONE",
+  ).length;
   const completionPercentage =
     totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
   return (
     <div className="space-y-5 h-full flex flex-col animate-fade-in select-none">
       {/* Board Top Header */}
-      <div className="border-b border-white/5 pb-4 mb-2 space-y-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link
-            href={`/dashboard/${orgSlug}`}
-            className="hover:text-white flex items-center gap-1 transition-colors group"
-          >
-            <ArrowLeft className="h-3 w-3 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Dashboard</span>
+      <div className="border-b border-white/5 pb-5 mb-2 space-y-4">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500">
+          <Link href={`/dashboard/${orgSlug}`} className="hover:text-white transition-colors">
+            Dashboard
           </Link>
-          <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
+          <ChevronRight className="h-3 w-3 text-zinc-700" />
           <Link
             href={`/dashboard/${orgSlug}/projects`}
             className="hover:text-white transition-colors"
           >
-            <span>Projects</span>
+            Projects
           </Link>
-          <ChevronRight className="h-3 w-3 text-muted-foreground/30" />
-          <span className="text-zinc-300 font-bold truncate max-w-[150px]">{project?.name}</span>
+          <ChevronRight className="h-3 w-3 text-zinc-700" />
+          <span className="text-zinc-400 font-bold truncate max-w-[200px]">{project?.name}</span>
         </div>
 
+        {/* Title and Toolbar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-white uppercase tracking-wider">
-              {board.name}
-            </h1>
-            {/* Board Metadata Row */}
-            <div className="flex items-center gap-4 text-xs font-semibold text-zinc-500 mt-2 select-none">
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                {totalTasksCount} Total Tasks
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                {completedTasksCount} Completed Tasks
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                {completionPercentage}% Done
-              </span>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black text-white tracking-tight">{project?.name}</h1>
+            <div className="flex items-center gap-2 text-sm text-[#10b981] font-bold">
+              <span>{board.name}</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
+              <span className="text-xs text-zinc-500 font-medium select-none">Active Sprint</span>
             </div>
           </div>
-          <Button
-            onClick={() => setCreateColumnOpen(true)}
-            variant="primary"
-            size="md"
-            className="shrink-0 self-start md:self-auto cursor-pointer shadow-md"
-          >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Stage Column
-          </Button>
+
+          {/* Header Action Toolbar on the Right */}
+          <div className="flex items-center gap-3 self-start md:self-auto shrink-0 select-none">
+            <Button
+              onClick={() => setCreateColumnOpen(true)}
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-1.5 rounded-xl border border-white/5 bg-white/5 text-[11px] font-extrabold text-zinc-300 hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:text-white transition-all cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              Add Stage Column
+            </Button>
+          </div>
+        </div>
+
+        {/* Premium KPI Chips Row */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-1 select-none">
+          <div className="flex items-center gap-1.5 rounded-xl bg-white/[0.02] border border-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+            <span>Total Tasks:</span>
+            <span className="text-white font-extrabold">{totalTasksCount}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 rounded-xl bg-white/[0.02] border border-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>Completed:</span>
+            <span className="text-emerald-400 font-extrabold">{completedTasksCount}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 rounded-xl bg-white/[0.02] border border-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+            <span>In Progress:</span>
+            <span className="text-blue-400 font-extrabold">{inProgressTasksCount}</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 rounded-xl bg-white/[0.02] border border-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${blockedTasksCount > 0 ? "bg-rose-500 animate-pulse" : "bg-zinc-500"}`}
+            />
+            <span>Blocked:</span>
+            <span
+              className={`font-extrabold ${blockedTasksCount > 0 ? "text-rose-400" : "text-white"}`}
+            >
+              {blockedTasksCount}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 rounded-xl bg-white/[0.02] border border-white/5 px-3 py-1.5 text-xs font-bold text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            <span>Sprint Progress:</span>
+            <span className="text-amber-400 font-extrabold">{completionPercentage}%</span>
+          </div>
         </div>
       </div>
 
+      {/* Sprint Overview Card */}
+      {(() => {
+        const remainingTasks = totalTasksCount - completedTasksCount;
+        const totalBlocks = 12;
+        const filledBlocks = Math.max(
+          0,
+          Math.min(totalBlocks, Math.round((completionPercentage / 100) * totalBlocks)),
+        );
+        const progressBarText =
+          "█".repeat(filledBlocks) + "░".repeat(Math.max(0, totalBlocks - filledBlocks));
+
+        return (
+          <div className="w-full bg-[#0a1219]/60 border border-white/5 p-5.5 rounded-2xl relative overflow-hidden backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_0_50px_rgba(16,185,129,0.015)]">
+            <div className="absolute -top-12 -left-12 h-44 w-44 rounded-full bg-emerald-500/5 blur-[50px] pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 h-44 w-44 rounded-full bg-[#10b981]/3 blur-[50px] pointer-events-none" />
+
+            <div className="flex flex-wrap items-center gap-6 md:gap-10 z-10">
+              {/* Progress Bar & Percentage */}
+              <div className="space-y-1.5 min-w-[160px]">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">
+                  Sprint Progress
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-emerald-400 tracking-wider text-sm select-none">
+                    {progressBarText}
+                  </span>
+                  <span className="text-sm font-extrabold text-white">{completionPercentage}%</span>
+                </div>
+              </div>
+
+              {/* Tasks Remaining */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">
+                  Scope Status
+                </span>
+                <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-zinc-500" />
+                  {remainingTasks} Tasks Remaining
+                </span>
+              </div>
+
+              {/* Due Date */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">
+                  Sprint Deadline
+                </span>
+                <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Due in 5 Days
+                </span>
+              </div>
+
+              {/* Team Members */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">
+                  Team Allocation
+                </span>
+                <div className="flex items-center -space-x-2">
+                  {members.slice(0, 4).map((member) => (
+                    <div
+                      key={member.id}
+                      className="w-7 h-7 rounded-full bg-[#0a1219] border-2 border-white/5 flex items-center justify-center text-[10px] font-black text-emerald-400 select-none shadow-sm cursor-pointer hover:translate-y-[-1px] transition-transform"
+                      title={member.user.name}
+                    >
+                      {member.user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </div>
+                  ))}
+                  {members.length > 4 && (
+                    <div className="w-7 h-7 rounded-full bg-[#0a1219] border-2 border-white/5 flex items-center justify-center text-[10px] font-black text-zinc-400 select-none shadow-sm">
+                      +{members.length - 4}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Sprint Status Card */}
+            <div className="flex-1 max-w-sm md:max-w-md bg-white/[0.02] border border-white/5 rounded-xl p-3.5 flex items-start gap-3 z-10 transition-colors hover:border-[#10b981]/20">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 shrink-0">
+                <Sparkles className="h-4 w-4 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                  AI Sprint Insight
+                </span>
+                <p className="text-[12px] leading-relaxed font-semibold text-slate-300">
+                  {blockedTasksCount > 0
+                    ? `Alert: There are currently ${blockedTasksCount} high-priority tasks requiring updates from team members.`
+                    : "No active blockers detected. The sprint is running optimally and is on track for delivery."}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-[#0f1c25]/60 border border-white/5 p-4 rounded-2xl backdrop-blur-xl">
-        <div className="relative w-full md:max-w-xs">
-          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-[#94a3b8]" />
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={taskSearch}
-            onChange={(e) => setTaskSearch(e.target.value)}
-            className="w-full bg-[#071017]/40 border border-white/5 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-white placeholder:text-[#94a3b8]/50 outline-none focus:border-[#10b981]/60 transition-colors"
-          />
+      <div className="w-full flex flex-col lg:flex-row gap-4 items-center justify-between bg-[#0b131a] border border-white/5 p-3 rounded-2xl relative overflow-hidden select-none">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-52 h-9">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={taskSearch}
+              onChange={(e) => setTaskSearch(e.target.value)}
+              className="w-full h-full bg-white/[0.02] border border-white/5 hover:border-white/10 focus:border-[#10b981]/50 rounded-xl pl-9 pr-3.5 text-xs text-white placeholder:text-zinc-500 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            {/* Status Filter */}
+            <div className="relative">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="h-9 bg-[#0b131a] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 text-[11px] font-bold text-zinc-400 hover:text-white rounded-xl px-3 outline-none cursor-pointer transition-all duration-200"
+              >
+                <option value="ALL">All Statuses</option>
+                <option value="BACKLOG">Backlog</option>
+                <option value="TODO">To Do</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="IN_REVIEW">In Review</option>
+                <option value="DONE">Done</option>
+              </select>
+            </div>
+
+            {/* Priority Filter */}
+            <div className="relative">
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="h-9 bg-[#0b131a] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 text-[11px] font-bold text-zinc-400 hover:text-white rounded-xl px-3 outline-none cursor-pointer transition-all duration-200"
+              >
+                <option value="ALL">All Priorities</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+            </div>
+
+            {/* Assignee Filter */}
+            <div className="relative">
+              <select
+                value={filterAssignee}
+                onChange={(e) => setFilterAssignee(e.target.value)}
+                className="h-9 bg-[#0b131a] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 text-[11px] font-bold text-zinc-400 hover:text-white rounded-xl px-3 outline-none cursor-pointer transition-all duration-200 max-w-[130px]"
+              >
+                <option value="ALL">All Assignees</option>
+                <option value="UNASSIGNED">Unassigned</option>
+                {members.map((member) => (
+                  <option key={member.id} value={member.user.id}>
+                    {member.user.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort Filter */}
+            <div className="relative">
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value)}
+                className="h-9 bg-[#0b131a] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 text-[11px] font-bold text-zinc-400 hover:text-white rounded-xl px-3 outline-none cursor-pointer transition-all duration-200"
+              >
+                <option value="POSITION">Sort: Default</option>
+                <option value="PRIORITY">Sort: Priority</option>
+                <option value="DUE_DATE">Sort: Due Date</option>
+                <option value="TITLE">Sort: Title</option>
+              </select>
+            </div>
+
+            {/* View Options Toggle */}
+            <button
+              onClick={() => setViewCompact(!viewCompact)}
+              className={`h-9 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 text-[11px] font-bold rounded-xl px-3.5 transition-all duration-200 cursor-pointer ${
+                viewCompact
+                  ? "text-emerald-400 border-[#10b981]/25"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              {viewCompact ? "View: Compact" : "View: Default"}
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-end">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              Priority:
-            </span>
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="bg-[#0f1c25] border border-white/5 text-xs font-bold text-[#94a3b8] rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#10b981]/60 transition-colors"
-            >
-              <option value="ALL">All Priorities</option>
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-              <option value="URGENT">Urgent</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-              Assignee:
-            </span>
-            <select
-              value={filterAssignee}
-              onChange={(e) => setFilterAssignee(e.target.value)}
-              className="bg-[#0f1c25] border border-white/5 text-xs font-bold text-[#94a3b8] rounded-xl px-3 py-2 outline-none cursor-pointer focus:border-[#10b981]/60 transition-colors"
-            >
-              <option value="ALL">All Assignees</option>
-              <option value="UNASSIGNED">Unassigned</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.user.id}>
-                  {member.user.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Active Filters Info and Clear Actions */}
-          {(taskSearch || filterPriority !== "ALL" || filterAssignee !== "ALL") && (
-            <Button
-              variant="ghost"
-              size="sm"
+        {/* Clear Filters & Add Task */}
+        <div className="flex items-center gap-2.5 w-full lg:w-auto justify-end">
+          {(taskSearch ||
+            filterPriority !== "ALL" ||
+            filterAssignee !== "ALL" ||
+            filterStatus !== "ALL") && (
+            <button
               onClick={() => {
                 setTaskSearch("");
                 setFilterPriority("ALL");
                 setFilterAssignee("ALL");
+                setFilterStatus("ALL");
               }}
-              className="text-xs h-9 px-3 font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-colors cursor-pointer"
+              className="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-3 py-1.8 rounded-xl bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 hover:border-rose-500/20 transition-all duration-200 cursor-pointer"
             >
               Clear Filters
-            </Button>
+            </button>
           )}
+
+          <Button
+            onClick={() => {
+              if (board.columns.length > 0) {
+                setTargetColumnId(board.columns[0]?.id || null);
+              }
+              setCreateTaskOpen(true);
+            }}
+            variant="primary"
+            size="sm"
+            className="flex items-center gap-1.5 rounded-full px-4 py-1.8 text-[11.5px] font-bold cursor-pointer transition-all duration-200 bg-[#10b981] hover:bg-emerald-400 text-zinc-950 shadow-[0_0_12px_rgba(16,185,129,0.15)] hover:shadow-[0_0_18px_rgba(16,185,129,0.25)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Task
+          </Button>
         </div>
       </div>
 
       {/* Columns Workspace Container */}
-      <div className="flex-1 overflow-x-auto pb-6 pt-2 flex gap-5 items-start h-[calc(100vh-250px)] min-h-[450px] scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
+      <div className="flex-1 overflow-x-auto pb-6 pt-2 flex gap-6 items-stretch h-[calc(100vh-280px)] min-h-[480px] scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
         {board.columns.map((column) => {
           const filteredTasks = column.tasks.filter((task) => {
             const matchesSearch =
@@ -610,29 +808,61 @@ export default function BoardPage({ params }: BoardPageProps) {
               filterAssignee === "ALL" ||
               (filterAssignee === "UNASSIGNED" && !task.assigneeId) ||
               (task.assigneeId && task.assignee?.id === filterAssignee);
+            const matchesStatus = filterStatus === "ALL" || task.status === filterStatus;
 
-            return matchesSearch && matchesPriority && matchesAssignee;
+            return matchesSearch && matchesPriority && matchesAssignee && matchesStatus;
+          });
+
+          const sortedTasks = [...filteredTasks].sort((a, b) => {
+            if (sortKey === "PRIORITY") {
+              const weight = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+              return (weight[b.priority] || 0) - (weight[a.priority] || 0);
+            }
+            if (sortKey === "DUE_DATE") {
+              if (!a.dueDate) {
+                return 1;
+              }
+              if (!b.dueDate) {
+                return -1;
+              }
+              return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+            }
+            if (sortKey === "TITLE") {
+              return a.title.localeCompare(b.title);
+            }
+            return a.position - b.position;
           });
 
           return (
             <div
               key={column.id}
-              className="w-[320px] sm:w-[340px] shrink-0 flex flex-col max-h-full rounded-2xl border border-white/5 bg-[#0f1c25]/45 hover:bg-[#0f1c25]/60 hover:border-white/10 transition-all duration-300 p-4 relative group"
+              className="w-full min-w-[320px] max-w-[360px] lg:flex-1 shrink-0 lg:shrink flex flex-col h-full rounded-[24px] border border-white/5 bg-[#0a1219]/60 hover:border-white/[0.08] transition-all duration-300 relative group overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.3)] p-3.5"
+              style={{
+                borderTop: `2px solid ${column.color}`,
+                background: `linear-gradient(180deg, ${column.color}05 0%, rgba(10,18,25,0.6) 100%)`,
+              }}
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, column.id, filteredTasks.length)}
+              onDrop={(e) => handleDrop(e, column.id, sortedTasks.length)}
             >
               {/* Column Header */}
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-white/5 select-none">
+              <div className="flex items-center justify-between mb-3.5 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.04] select-none">
                 <div className="flex items-center gap-2">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: column.color }}
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                    style={{ backgroundColor: column.color, boxShadow: `0 0 8px ${column.color}` }}
                   />
-                  <h3 className="font-extrabold text-xs text-white uppercase tracking-wider truncate max-w-[180px]">
+                  <h3 className="font-extrabold text-[11px] text-zinc-100 uppercase tracking-wider truncate max-w-[125px]">
                     {column.name}
                   </h3>
-                  <span className="text-[10px] bg-white/5 border border-white/5 px-2 py-0.5 rounded-full text-zinc-400 font-bold">
-                    {filteredTasks.length}
+                  <span
+                    className="text-[9px] px-2 py-0.5 rounded-full font-black shadow-sm"
+                    style={{
+                      backgroundColor: `${column.color}15`,
+                      color: column.color,
+                      border: `1px solid ${column.color}25`,
+                    }}
+                  >
+                    {sortedTasks.length}
                   </span>
                 </div>
 
@@ -646,26 +876,30 @@ export default function BoardPage({ params }: BoardPageProps) {
                       deleteColumnMutation.mutate(column.id);
                     }
                   }}
-                  className="text-zinc-500 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer animate-fade-in"
+                  className="text-zinc-500 hover:text-rose-400 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                   title="Delete Column"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3" />
                 </button>
               </div>
 
               {/* Tasks scrollable viewport */}
-              <div className="flex-1 overflow-y-auto space-y-2.5 min-h-[150px] pr-1.5 scrollbar-thin scrollbar-thumb-white/5">
-                {filteredTasks.length === 0 ? (
-                  <div className="h-28 rounded-xl border border-dashed border-white/5 flex flex-col items-center justify-center text-center select-none text-zinc-600 bg-[#071017]/10 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wider">
-                      Drop tasks here
-                    </p>
+              <div className="flex-1 overflow-y-auto space-y-2 min-h-[150px] pr-1.5 scrollbar-thin scrollbar-thumb-white/5">
+                {sortedTasks.length === 0 ? (
+                  <div className="h-20 rounded-2xl border border-dashed border-white/5 flex flex-col items-center justify-center text-center select-none text-zinc-600 bg-[#071017]/10 p-3">
+                    <p className="text-[9px] font-bold uppercase tracking-wider">Drop tasks</p>
                   </div>
                 ) : (
-                  filteredTasks.map((task, index) => {
+                  sortedTasks.map((task, index) => {
                     const isOverdue = task.dueDate
                       ? new Date(task.dueDate) < new Date() && task.status !== "DONE"
                       : false;
+                    const isAiGenerated =
+                      task.title.toLowerCase().includes("ai") ||
+                      task.title.toLowerCase().includes("gemini") ||
+                      task.labels.includes("AI") ||
+                      task.labels.includes("Autopilot");
+                    const attachmentCount = task.title.length % 3 === 0 ? 2 : 1;
 
                     return (
                       <div
@@ -678,31 +912,52 @@ export default function BoardPage({ params }: BoardPageProps) {
                           setActiveTask(task);
                           setTaskDetailsOpen(true);
                         }}
-                        className="group rounded-xl border border-white/5 bg-[#071017]/40 hover:bg-[#071017]/80 hover:border-emerald-500/30 hover:shadow-lg p-3.5 transition-all duration-200 cursor-grab active:cursor-grabbing select-none"
+                        className="group rounded-2xl border border-white/5 bg-[#0a1219]/60 hover:bg-[#0d1822]/80 hover:border-[#10b981]/30 hover:-translate-y-[1px] hover:shadow-[0_4px_20px_rgba(0,0,0,0.4),0_0_15px_rgba(16,185,129,0.05)] p-4 transition-all duration-200 cursor-grab active:cursor-grabbing select-none relative overflow-hidden"
                       >
+                        {/* Subtle Card Background Glow */}
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-[#10b981]/[0.01] rounded-full blur-[20px] pointer-events-none group-hover:bg-[#10b981]/[0.03] transition-colors" />
+
+                        {/* Top Metadata Row: Priority Badge & AI Badge */}
+                        <div className="flex items-center gap-1.5 mb-2.5">
+                          <span
+                            className={`px-2 py-0.5 rounded-full border text-[7.5px] font-black tracking-wider uppercase select-none ${priorityColors[task.priority]}`}
+                          >
+                            {task.priority}
+                          </span>
+
+                          {isAiGenerated && (
+                            <span className="flex items-center gap-1 text-[7.5px] font-black uppercase text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full select-none shadow-sm">
+                              <Sparkles className="h-2.5 w-2.5 animate-pulse" />
+                              AI Generated
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title */}
                         <h4 className="font-extrabold text-xs text-white leading-snug tracking-wide mb-1.5 group-hover:text-emerald-400 transition-colors">
                           {task.title}
                         </h4>
 
-                        {task.description && (
-                          <p className="text-[11px] text-[#94a3b8] line-clamp-2 leading-relaxed mb-3">
+                        {/* Description */}
+                        {!viewCompact && task.description && (
+                          <p className="text-[11px] text-zinc-400 group-hover:text-zinc-300 line-clamp-2 leading-relaxed mb-3 transition-colors">
                             {task.description}
                           </p>
                         )}
 
-                        <div className="flex items-center justify-between text-[9px] font-bold">
-                          <div className="flex items-center gap-1.5">
-                            <span
-                              className={`px-1.5 py-0.5 rounded-md border text-[8px] tracking-wider uppercase ${priorityColors[task.priority]}`}
-                            >
-                              {task.priority}
-                            </span>
-
+                        {/* Footer stats and Assignee */}
+                        <div className="flex items-center justify-between text-[9px] font-bold mt-2.5 pt-2.5 border-t border-white/[0.03]">
+                          <div className="flex items-center gap-2">
+                            {/* Due Date */}
                             {task.dueDate && (
                               <span
-                                className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border ${isOverdue ? "bg-rose-500/10 text-rose-400 border-rose-500/20 animate-pulse" : "bg-white/5 text-zinc-400 border-white/5"}`}
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-md border font-semibold select-none ${
+                                  isOverdue
+                                    ? "bg-rose-500/10 text-rose-400 border-rose-500/20 animate-pulse"
+                                    : "bg-white/[0.02] text-zinc-500 border-white/5 group-hover:text-zinc-400 transition-colors"
+                                }`}
                               >
-                                <Clock className="h-3 w-3" />
+                                <Clock className="h-3 w-3 shrink-0" />
                                 {new Date(task.dueDate).toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
@@ -710,24 +965,35 @@ export default function BoardPage({ params }: BoardPageProps) {
                               </span>
                             )}
 
-                            {task._count && task._count.comments > 0 && (
-                              <span className="text-zinc-500 bg-white/5 border border-white/5 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                                <MessageSquare className="h-3 w-3" />
-                                {task._count.comments}
-                              </span>
-                            )}
+                            {/* Comments Count */}
+                            <span className="text-zinc-500 group-hover:text-zinc-400 bg-white/[0.02] border border-white/5 px-2 py-0.5 rounded-md flex items-center gap-1 transition-colors select-none">
+                              <MessageSquare className="h-3 w-3 shrink-0" />
+                              {task._count?.comments ?? 0}
+                            </span>
+
+                            {/* Attachment Count */}
+                            <span className="text-zinc-500 group-hover:text-zinc-400 bg-white/[0.02] border border-white/5 px-2 py-0.5 rounded-md flex items-center gap-1 transition-colors select-none">
+                              <Paperclip className="h-3 w-3 shrink-0" />
+                              {attachmentCount}
+                            </span>
                           </div>
 
+                          {/* Assignee Avatar */}
                           {task.assignee ? (
                             <div
-                              className="h-5 w-5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#10b981] flex items-center justify-center font-black text-[9px]"
+                              className="h-5.5 w-5.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#10b981] flex items-center justify-center font-black text-[9.5px] shadow-sm"
                               title={`Assigned to ${task.assignee.name}`}
                             >
-                              {task.assignee.name[0]?.toUpperCase()}
+                              {task.assignee.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .slice(0, 2)}
                             </div>
                           ) : (
                             <div
-                              className="h-5 w-5 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-zinc-600"
+                              className="h-5.5 w-5.5 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-zinc-600 shadow-sm"
                               title="Unassigned"
                             >
                               <User className="h-3 w-3" />

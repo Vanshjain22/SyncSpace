@@ -108,24 +108,24 @@ export function ActivityTimeline({ orgSlug, activities, isLoading }: ActivityTim
   const sliced = currentActivities.slice(0, 4);
 
   return (
-    <Card className="p-6 flex flex-col justify-between bg-[#0b131a] border border-white/5 rounded-2xl min-h-[360px] relative select-none">
+    <Card className="p-6 flex flex-col justify-between bg-[#0b131a] border border-white/5 rounded-2xl min-h-[400px] relative select-none">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-3">
-          <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="flex items-center justify-between border-b border-white/5 pb-3.5">
+          <h2 className="text-xs font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             Activity Feed
           </h2>
         </div>
 
         {/* Loading state */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-12 text-zinc-500 font-bold uppercase text-xs animate-pulse">
+          <div className="flex items-center justify-center py-12 text-zinc-500 font-bold uppercase text-sm animate-pulse">
             Loading timeline...
           </div>
         ) : sliced.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-xs font-bold text-zinc-500">No activity logged yet</p>
+            <p className="text-sm font-bold text-zinc-500">No activity logged yet</p>
           </div>
         ) : (
           <div className="space-y-3.5 mt-2">
@@ -137,25 +137,25 @@ export function ActivityTimeline({ orgSlug, activities, isLoading }: ActivityTim
                   key={act.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex gap-3 px-1 py-1 rounded-xl hover:bg-white/[0.01] transition-colors"
+                  className="flex gap-3.5 px-1 py-2 rounded-xl hover:bg-white/[0.01] transition-colors"
                 >
                   <div
                     className={cn(
-                      "w-7.5 h-7.5 rounded-lg flex items-center justify-center shrink-0 border mt-0.5",
+                      "w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border mt-0.5",
                       colorClass,
                     )}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4.5 h-4.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-white leading-relaxed">
+                    <p className="text-sm text-white leading-relaxed">
                       <span className="font-bold hover:text-[#10b981] transition-colors">
                         {act.user}
                       </span>{" "}
                       <span className="text-[#94a3b8]">{act.action}</span>{" "}
                       <span className="font-semibold text-zinc-300">{act.target}</span>
                     </p>
-                    <span className="text-[10px] text-zinc-500/60 block mt-0.5 font-bold">
+                    <span className="text-xs text-zinc-500/60 block mt-0.5 font-bold">
                       {formatTime(act.timestamp)}
                     </span>
                   </div>
@@ -167,10 +167,10 @@ export function ActivityTimeline({ orgSlug, activities, isLoading }: ActivityTim
       </div>
 
       {/* Footer view all link */}
-      <div className="pt-3 border-t border-white/5 mt-auto">
+      <div className="pt-3.5 border-t border-white/5 mt-auto">
         <Link
           href={`/dashboard/${orgSlug}/analytics`}
-          className="text-[10px] font-black uppercase tracking-widest text-[#10b981] hover:text-emerald-300 transition-colors flex items-center gap-1"
+          className="text-xs font-black uppercase tracking-widest text-[#10b981] hover:text-emerald-300 transition-colors flex items-center gap-1"
         >
           View all →
         </Link>

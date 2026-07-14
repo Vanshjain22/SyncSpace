@@ -1,6 +1,7 @@
-import { RATE_LIMIT } from "@syncspace/shared";
 import rateLimit from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
+
+import { RATE_LIMIT } from "@syncspace/shared";
 
 import { redis } from "@/infrastructure/cache/redisClient";
 
@@ -29,8 +30,8 @@ export const globalRateLimiter = rateLimit({
       statusCode: 429,
     });
   },
-  // Skip rate limiting for health checks
-  skip: (req) => req.path === "/api/health",
+  // Skip rate limiting for health checks and development environments
+  skip: (req) => process.env.NODE_ENV === "development" || req.path === "/api/health",
 });
 
 /**
@@ -52,13 +53,13 @@ export const authRateLimiter = rateLimit({
     const email = (req.body as { email?: string })?.email ?? "";
     return `${req.ip}-${email}`;
   },
+  skip: () => process.env.NODE_ENV === "development",
   handler: (_req, res) => {
     res.status(429).json({
       success: false,
       error: {
         code: "RATE_LIMITED",
-        message:
-          "Too many authentication attempts. Please wait 15 minutes before trying again.",
+        message: "Too many authentication attempts. Please wait 15 minutes before trying again.",
       },
       statusCode: 429,
     });

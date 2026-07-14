@@ -80,3 +80,39 @@ export async function askAssistant(req: Request, res: Response, next: NextFuncti
     next(error);
   }
 }
+
+/**
+ * Endpoint to retrieve AI-driven dashboard welcome greeting and context actions
+ */
+export async function getDashboardInsights(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    if (!req.user) {
+      next(new UnauthorizedError());
+      return;
+    }
+
+    const { orgId } = req.params;
+    if (!orgId) {
+      res.status(400).json({ success: false, error: "Organization ID is required" });
+      return;
+    }
+
+    const result = await aiService.generateDashboardInsights(req.user.sub, orgId);
+
+    if (result.isErr()) {
+      next(result.error);
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.value,
+    });
+  } catch (error) {
+    next(error);
+  }
+}

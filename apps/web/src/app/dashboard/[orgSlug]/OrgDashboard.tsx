@@ -8,14 +8,12 @@ import { Briefcase, ChevronRight, FolderKanban, Layers, ListTodo, Users } from "
 
 import { type ApiResponse } from "@syncspace/shared";
 
+import { AIInsightsHeader } from "@/components/dashboard/AIInsightsHeader";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
-import { HeroBanner } from "@/components/dashboard/HeroBanner";
 import { RecentTasks } from "@/components/dashboard/RecentTasks";
-import { StatsCards } from "@/components/dashboard/StatsCards";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
-import { useAuthStore } from "@/stores/auth.store";
 import { useOrgStore } from "@/stores/org.store";
 
 interface Organization {
@@ -45,9 +43,8 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
   const params = use(paramsPromise);
   const orgSlug = params.orgSlug;
   const { setCurrentOrganization } = useOrgStore();
-  const user = useAuthStore((s) => s.user);
 
-  const [bannerOpen, setBannerOpen] = useState(true);
+  const [filteredTaskIds, setFilteredTaskIds] = useState<string[] | null>(null);
 
   // Fetch Organization details
   const orgQuery = useQuery({
@@ -142,22 +139,11 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
   const org = orgQuery.data;
   const projects = projectsQuery.data || [];
   const tasks = tasksQuery.data || [];
+  const displayedTasks = filteredTaskIds
+    ? tasks.filter((t) => filteredTaskIds.includes(t.id))
+    : tasks;
   const membersCount = statsQuery.data?.teamMembersCount ?? membersQuery.data?.length ?? 8;
-  const completedTasks = statsQuery.data?.completedTasks ?? 84;
-  const productivityScore = statsQuery.data?.productivityScore ?? 92;
   const activities = statsQuery.data?.activities;
-
-  // Greeting dynamic text
-  const getGreeting = () => {
-    const hr = new Date().getHours();
-    if (hr < 12) {
-      return "Good morning";
-    }
-    if (hr < 17) {
-      return "Good afternoon";
-    }
-    return "Good evening";
-  };
 
   // Loading state
   if (orgQuery.isLoading) {
@@ -200,51 +186,13 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in relative pb-10">
-      {/* Global SVG searchlight beam animations injected */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes lighthouse-sweep {
-              0% {
-                transform: rotate(20deg) scaleY(0.9) translateX(30px);
-                opacity: 0.15;
-                filter: blur(6px);
-              }
-              50% {
-                transform: rotate(-10deg) scaleY(1.05) translateX(0px);
-                opacity: 0.75;
-                filter: blur(3px);
-              }
-              100% {
-                transform: rotate(20deg) scaleY(0.9) translateX(30px);
-                opacity: 0.15;
-                filter: blur(6px);
-              }
-            }
-            .animate-lighthouse-sweep {
-              animation: lighthouse-sweep 8s ease-in-out infinite;
-            }
-          `,
-        }}
+    <div className="space-y-5 animate-fade-in relative pb-8">
+      {/* AI Workspace Overview Hero */}
+      <AIInsightsHeader
+        orgId={org.id}
+        orgSlug={org.slug}
+        onFilterBlocked={(taskIds) => setFilteredTaskIds(taskIds)}
       />
-
-      {/* Top Header Greetings */}
-      <div className="space-y-1">
-        <h1 className="text-2xl md:text-[32px] font-bold tracking-tight text-white leading-tight">
-          {getGreeting()},{" "}
-          <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-extrabold">
-            {user?.name || "Vansh"}
-          </span>
-          ! 👋
-        </h1>
-        <p className="text-xs text-[#94a3b8] font-semibold">
-          Here&apos;s an overview of your workspace activity today.
-        </p>
-      </div>
-
-      {/* Hero promo banner */}
-      <HeroBanner orgSlug={org.slug} bannerOpen={bannerOpen} onClose={() => setBannerOpen(false)} />
 
       {/* Quick Actions Panel */}
       <div className="space-y-2.5 mt-2 md:hidden">
@@ -331,16 +279,6 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
           </Link>
         </div>
       </div>
-
-      {/* KPI stats cards row */}
-      <StatsCards
-        orgSlug={org.slug}
-        totalProjects={projects.length}
-        completedTasks={completedTasks}
-        totalTasks={statsQuery.data?.totalTasks ?? 0}
-        teamMembers={membersCount}
-        productivityScore={productivityScore}
-      />
 
       {/* Main Content Area: Onboarding vs normal widgets */}
       {projects.length === 0 ? (
@@ -458,7 +396,7 @@ export function OrgDashboard({ paramsPromise }: OrgDashboardProps) {
       ) : (
         /* Main Grid: split 50/50 on desktop with Recent Tasks & Activity Timeline */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <RecentTasks tasks={tasks} orgSlug={org.slug} isLoading={tasksQuery.isLoading} />
+          <RecentTasks tasks={displayedTasks} orgSlug={org.slug} isLoading={tasksQuery.isLoading} />
           <ActivityTimeline
             orgSlug={org.slug}
             activities={activities}

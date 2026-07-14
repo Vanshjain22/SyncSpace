@@ -234,4 +234,203 @@ Guidelines for your response:
       return Result.err(new Error(`Failed to generate response: ${error.message}`));
     }
   }
+
+  /**
+   * Generate real-time AI sprint diagnostics for the organization dashboard
+   */
+  async generateDashboardInsights(userId: string, orgId: string): AsyncResult<any> {
+    // 1. Authorization check: does user belong to this organization?
+    const membership = await prisma.organizationMember.findFirst({
+      where: { userId, organizationId: orgId },
+    });
+    if (!membership) {
+      return Result.err(new ForbiddenError("You do not have access to this organization"));
+    }
+
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+    });
+    if (!org) {
+      return Result.err(new NotFoundError("Organization"));
+    }
+
+    // 2. Fetch all projects in organization
+    const projects = await prisma.project.findMany({
+      where: { organizationId: orgId },
+      select: { id: true, name: true },
+    });
+    const projectIds = projects.map((p) => p.id);
+
+    // 3. Fetch all tasks in these projects
+    const boards = await prisma.board.findMany({
+      where: { projectId: { in: projectIds } },
+      select: { id: true },
+    });
+    const boardIds = boards.map((b) => b.id);
+
+    const columns = await prisma.column.findMany({
+      where: { boardId: { in: boardIds } },
+      select: { id: true },
+    });
+    const columnIds = columns.map((c) => c.id);
+
+    const tasks = await prisma.task.findMany({
+      where: { columnId: { in: columnIds } },
+      include: {
+        assignee: { select: { id: true, name: true } },
+      },
+    });
+
+    const members = await prisma.organizationMember.findMany({
+      where: { organizationId: orgId },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+    });
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter((t) => t.status === "DONE").length;
+    const productivityScore =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+
+    // Detect overdue tasks
+    const now = new Date();
+    const overdueTasks = tasks.filter(
+      (t) => t.status !== "DONE" && t.dueDate && new Date(t.dueDate) < now,
+    );
+    overdueTasks.sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+
+    // Detect tasks in review
+    const reviewTasks = tasks.filter((t) => t.status === "IN_REVIEW");
+
+    // Detect oldest overdue task and guard access
+    const oldestOverdue = overdueTasks.length > 0 && overdueTasks[0] ? overdueTasks[0] : null;
+
+    // Build context prompt
+    const promptText = `
+You are SyncSpace Autopilot, an intelligent PM assistant.
+Provide a list of exactly 3 to 4 concise status bullet lines summarizing the current sprint health, velocity, blockages, and recommendations.
+Do NOT output a general greeting (like "Hey Vansh" or "Good Morning") in the text. Output ONLY the status bullet lines.
+
+Workspace metrics to reference dynamically:
+- Total members: ${members.length}
+- Total projects: ${projects.length}
+- Total tasks: ${totalTasks}
+- Completed tasks: ${completedTasks}
+- Productivity score: ${productivityScore}%
+- Overdue tasks count: ${overdueTasks.length}
+${oldestOverdue ? `- Oldest overdue task detail: "${oldestOverdue.title}" assigned to ${oldestOverdue.assignee?.name || "Unassigned"}` : ""}
+- Tasks in review count: ${reviewTasks.length}
+
+Format guidelines:
+1. Return exactly 3 to 4 lines, each starting with a bullet character "• ".
+2. DO NOT use markdown formatting (no bold **, no headers). Keep the text plain.
+3. Keep each line under 80 characters.
+`;
+
+    let insightsBullets = [
+      `Workspace metrics are optimal with ${completedTasks} completed out of ${totalTasks} tasks.`,
+      `Overall productivity score is currently at ${productivityScore}%.`,
+      overdueTasks.length > 0
+        ? `${oldestOverdue?.assignee?.name || "Unassigned"} has ${overdueTasks.length} overdue task(s), including "${oldestOverdue?.title}".`
+        : "All active tasks are currently matching their target deadlines.",
+    ];
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: promptText,
+      });
+
+      if (response.text) {
+        const lines = response.text
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => {
+            if (line.startsWith("•") || line.startsWith("-") || line.startsWith("*")) {
+              return line.substring(1).trim();
+            }
+            return line;
+          });
+        if (lines.length > 0) {
+          insightsBullets = lines;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to generate AI welcome insights:", err);
+    }
+
+    const insightsText = insightsBullets.join("\n");
+
+    // Determine Dynamic actions
+    const actions = [];
+
+    // Action 1: Ping overdue user
+    if (oldestOverdue && oldestOverdue.assignee) {
+      actions.push({
+        type: "PING_USER",
+        label: `⚡ Ping ${oldestOverdue.assignee.name.split(" ")[0]}`,
+        payload: {
+          userId: oldestOverdue.assignee.id,
+          userName: oldestOverdue.assignee.name,
+          taskId: oldestOverdue.id,
+          taskTitle: oldestOverdue.title,
+        },
+      });
+    }
+
+    // Action 2: Go to AI Report page for first project
+    if (projects.length > 0 && projects[0]) {
+      const firstProject = projects[0];
+      actions.push({
+        type: "GENERATE_REPORT",
+        label: "📊 Generate Sprint Summary",
+        payload: {
+          projectId: firstProject.id,
+          projectName: firstProject.name,
+        },
+      });
+    }
+
+    // Action 3: View Blocked/Urgent tasks filter
+    const highPriorityTasks = tasks.filter(
+      (t) => t.status !== "DONE" && (t.priority === "URGENT" || t.priority === "HIGH"),
+    );
+    if (highPriorityTasks.length > 0 || overdueTasks.length > 0) {
+      const blockedTaskIds = Array.from(
+        new Set([...overdueTasks.map((t) => t.id), ...highPriorityTasks.map((t) => t.id)]),
+      );
+
+      actions.push({
+        type: "FILTER_BLOCKED",
+        label: "🔍 View Blockers",
+        payload: {
+          taskIds: blockedTaskIds,
+        },
+      });
+    }
+
+    // Action 4: Ask AI conversational assistant
+    actions.push({
+      type: "ASK_AI",
+      label: "✨ Ask AI",
+      payload: {},
+    });
+
+    return Result.ok({
+      insightsText,
+      insightsBullets,
+      actions,
+      metrics: {
+        totalProjects: projects.length,
+        completedTasks,
+        totalTasks,
+        productivityScore,
+        teamMembersCount: members.length,
+        pendingReviewsCount: reviewTasks.length,
+        overdueTasksCount: overdueTasks.length,
+      },
+    });
+  }
 }
