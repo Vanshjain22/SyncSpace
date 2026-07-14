@@ -1,7 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -16,8 +15,7 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
+import { use, useEffect, useRef, useState } from "react";
 
 import { useAI } from "@/hooks/useAI";
 import { api } from "@/lib/api-client";

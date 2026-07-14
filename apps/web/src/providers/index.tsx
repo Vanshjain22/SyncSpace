@@ -1,11 +1,11 @@
 import { type ReactNode } from "react";
 
-import { KeyboardShortcutsHandler } from "@/components/KeyboardShortcutsHandler";
-
 import { AuthInitializer } from "./AuthInitializer";
 import { QueryProvider } from "./QueryProvider";
 import { SocketProvider } from "./SocketProvider";
 import { ThemeProvider } from "./ThemeProvider";
+
+import { KeyboardShortcutsHandler } from "@/components/KeyboardShortcutsHandler";
 
 /**
  * Root provider composition.

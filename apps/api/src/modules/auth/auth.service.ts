@@ -1,10 +1,9 @@
-import { JWT, type LoginInput, type RegisterInput, type UserPublic } from "@syncspace/shared";
-
 import { ConflictError, NotFoundError, UnauthorizedError } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import { prisma } from "@/infrastructure/database/prismaClient";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "@/lib/jwt";
 import { comparePassword, hashPassword } from "@/lib/password";
+import { JWT, type LoginInput, type RegisterInput, type UserPublic } from "@syncspace/shared";
 
 export interface AuthResult {
   user: UserPublic;

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { InviteResolver } from "./InviteResolver";
+
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Organization Invitation",

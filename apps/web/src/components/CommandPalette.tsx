@@ -1,8 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -14,8 +12,8 @@ import {
   Search,
   Settings,
 } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 
 import { api } from "@/lib/api-client";
 import { useOrgStore } from "@/stores/org.store";

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-
 import { type Socket, io } from "socket.io-client";
 
 import { useAuth } from "@/hooks/useAuth";

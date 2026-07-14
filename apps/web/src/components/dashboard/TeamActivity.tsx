@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import * as React from "react";
-
 import { motion } from "framer-motion";
 import { CheckSquare, Trash2 } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import * as React from "react";
 
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Progress } from "../ui/progress";
+
+import { cn } from "@/lib/utils";
 
 export function TeamActivity() {
   // Functional Quick Todo Checklist local state

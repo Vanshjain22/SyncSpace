@@ -1,5 +1,3 @@
-import { type OrganizationRole } from "@syncspace/shared";
-
 import {
   BadRequestError,
   ConflictError,
@@ -8,6 +6,7 @@ import {
 } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import { prisma } from "@/infrastructure/database/prismaClient";
+import { type OrganizationRole } from "@syncspace/shared";
 
 const INVITE_EXPIRY_DAYS = 7;
 

@@ -1,14 +1,13 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { CheckCircle2, FileText, MessageSquare, Plus } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
-import { motion } from "framer-motion";
-import { CheckCircle2, FileText, MessageSquare, Plus } from "lucide-react";
+import { Card } from "../ui/card";
 
 import { cn } from "@/lib/utils";
-
-import { Card } from "../ui/card";
 
 interface Activity {
   id: string | number;

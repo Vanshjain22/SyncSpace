@@ -1,11 +1,9 @@
 "use client";
 
+import { type ApiResponse } from "@syncspace/shared";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-import { useQuery } from "@tanstack/react-query";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { api } from "@/lib/api-client";
 import { useOrgStore } from "@/stores/org.store";

@@ -1,10 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { useEffect, useRef, useState } from "react";
-
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, HelpCircle, Mail, MessageSquare, Sparkles, X } from "lucide-react";
+import * as React from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function HelpModal() {
   const [isOpen, setIsOpen] = useState(false);

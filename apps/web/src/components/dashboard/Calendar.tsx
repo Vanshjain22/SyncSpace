@@ -1,13 +1,12 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as React from "react";
 import { useState } from "react";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Card } from "../ui/card";
 
 import { cn } from "@/lib/utils";
-
-import { Card } from "../ui/card";
 
 export function Calendar() {
   const [selectedDay, setSelectedDay] = useState(10);

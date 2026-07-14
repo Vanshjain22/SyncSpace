@@ -1,10 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import * as React from "react";
-import { useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -22,14 +18,16 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
-
-import { api } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
 
 import { ProfileCard } from "./ProfileCard";
 import { UserDropdownMenu } from "./UserDropdownMenu";
+
+import { api } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 interface Organization {
   id: string;

@@ -1,9 +1,8 @@
 import rateLimit from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 
-import { RATE_LIMIT } from "@syncspace/shared";
-
 import { redis } from "@/infrastructure/cache/redisClient";
+import { RATE_LIMIT } from "@syncspace/shared";
 
 /**
  * Global rate limiter — applied to all routes.

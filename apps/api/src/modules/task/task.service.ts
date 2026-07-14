@@ -1,5 +1,3 @@
-import { type CreateTaskInput, type UpdateTaskInput } from "@syncspace/shared";
-
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import {
@@ -8,6 +6,7 @@ import {
 } from "@/infrastructure/cache/cacheInvalidation";
 import { prisma } from "@/infrastructure/database/prismaClient";
 import { notificationService } from "@/modules/notification/notification.service";
+import { type CreateTaskInput, type UpdateTaskInput } from "@syncspace/shared";
 
 type TaskStatus = "BACKLOG" | "TODO" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 

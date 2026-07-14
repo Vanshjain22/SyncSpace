@@ -1,6 +1,5 @@
-import { create } from "zustand";
-
 import { type AuthUser } from "@syncspace/shared";
+import { create } from "zustand";
 
 interface AuthState {
   user: AuthUser | null;

@@ -1,15 +1,13 @@
 "use client";
 
+import { type ApiResponse } from "@syncspace/shared";
+import { useQuery } from "@tanstack/react-query";
+import { Briefcase, ChevronRight, FolderKanban, Layers, ListTodo, Users } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
-import { Briefcase, ChevronRight, FolderKanban, Layers, ListTodo, Users } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
-
-import { AIInsightsHeader } from "@/components/dashboard/AIInsightsHeader";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
+import { AIInsightsHeader } from "@/components/dashboard/AIInsightsHeader";
 import { RecentTasks } from "@/components/dashboard/RecentTasks";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

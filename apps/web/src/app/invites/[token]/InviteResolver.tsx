@@ -1,13 +1,11 @@
 "use client";
 
+import { type ApiResponse } from "@syncspace/shared";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Mail, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Mail, XCircle } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";

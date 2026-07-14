@@ -1,8 +1,7 @@
-import { type CreateProjectInput } from "@syncspace/shared";
-
 import { ConflictError, ForbiddenError, NotFoundError } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import { prisma } from "@/infrastructure/database/prismaClient";
+import { type CreateProjectInput } from "@syncspace/shared";
 
 export class ProjectService {
   /**

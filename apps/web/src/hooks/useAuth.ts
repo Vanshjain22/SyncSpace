@@ -1,10 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { type LoginInput, type RegisterInput } from "@syncspace/shared";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { getApiErrorMessage } from "@/lib/api-client";
 import { authApi } from "@/lib/auth";

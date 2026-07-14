@@ -1,13 +1,12 @@
 "use client";
 
-import * as React from "react";
-
 import { motion } from "framer-motion";
 import { CheckSquare } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import * as React from "react";
 
 import { Card } from "../ui/card";
+
+import { cn } from "@/lib/utils";
 
 interface DeadlinesProps {
   tasks?: Array<{

@@ -10,10 +10,8 @@
   "endOfLine": "lf",
   "importOrder": [
     "^\\./registerAliases$",
-    "^(react|next)(.*)$",
     "<THIRD_PARTY_MODULES>",
-    "^@syncspace/(.*)$",
-    "^@/(.*)$",
+    "^(@syncspace/|@/)(.*)$",
     "^[./]"
   ],
   "importOrderSeparation": true,

@@ -1,9 +1,8 @@
 import { type NextFunction, type Request, type Response } from "express";
 
-import { type OrganizationRole, ROLE_HIERARCHY } from "@syncspace/shared";
-
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/core/errors/HttpErrors";
 import { prisma } from "@/infrastructure/database/prismaClient";
+import { type OrganizationRole, ROLE_HIERARCHY } from "@syncspace/shared";
 
 /**
  * RBAC Authorization middleware factory.

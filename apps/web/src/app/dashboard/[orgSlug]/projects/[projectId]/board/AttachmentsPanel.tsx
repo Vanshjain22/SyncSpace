@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, FileText, Film, ImageIcon, Loader2, Paperclip, Trash2 } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
+import { useState } from "react";
 
 import { api } from "@/lib/api-client";
 

@@ -1,13 +1,12 @@
 "use client";
 
+import { CheckSquare, ListTodo } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
-import { CheckSquare, ListTodo } from "lucide-react";
+import { Card } from "../ui/card";
 
 import { cn } from "@/lib/utils";
-
-import { Card } from "../ui/card";
 
 interface Task {
   id: string;

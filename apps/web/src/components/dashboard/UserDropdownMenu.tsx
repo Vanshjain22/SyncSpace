@@ -1,10 +1,5 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import { useRouter } from "next/navigation";
-import * as React from "react";
-import { useEffect, useRef, useState } from "react";
-
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
@@ -19,6 +14,10 @@ import {
   Sun,
   User,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import * as React from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/providers/SocketProvider";

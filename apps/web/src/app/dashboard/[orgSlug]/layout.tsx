@@ -1,12 +1,10 @@
 "use client";
 
+import { type ApiResponse } from "@syncspace/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import * as React from "react";
 import { useState } from "react";
-
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { CommandPalette } from "@/components/CommandPalette";
 import { HelpModal } from "@/components/dashboard/HelpModal";

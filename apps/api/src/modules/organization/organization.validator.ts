@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-import { createOrganizationSchema, updateMemberRoleSchema } from "@syncspace/shared";
-
 import { validate } from "@/middlewares/validate";
+import { createOrganizationSchema, updateMemberRoleSchema } from "@syncspace/shared";
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(2).max(100).optional(),

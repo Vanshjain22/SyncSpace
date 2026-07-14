@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { use, useEffect, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronRight,
@@ -15,8 +13,10 @@ import {
   Trash2,
   User,
 } from "lucide-react";
+import Link from "next/link";
+import { use, useEffect, useState } from "react";
 
-import { type ApiResponse } from "@syncspace/shared";
+import { AttachmentsPanel } from "./AttachmentsPanel";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +32,6 @@ import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api-client";
 import { useSocket } from "@/providers/SocketProvider";
 import { useOrgStore } from "@/stores/org.store";
-
-import { AttachmentsPanel } from "./AttachmentsPanel";
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 

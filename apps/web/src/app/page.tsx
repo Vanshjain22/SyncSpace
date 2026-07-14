@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
 import { cookies } from "next/headers";
 
 import { LandingPageClient } from "./LandingPageClient";
+
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "SyncSpace — Modern Team Collaboration Platform",

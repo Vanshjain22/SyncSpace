@@ -1,6 +1,5 @@
-import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
-
 import { type ApiErrorResponse } from "@syncspace/shared";
+import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from "axios";
 
 import { useAuthStore } from "@/stores/auth.store";
 

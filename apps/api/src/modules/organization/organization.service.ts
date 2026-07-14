@@ -1,8 +1,7 @@
-import { type CreateOrganizationInput, type OrganizationRole } from "@syncspace/shared";
-
 import { BadRequestError, ConflictError, NotFoundError } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import { prisma } from "@/infrastructure/database/prismaClient";
+import { type CreateOrganizationInput, type OrganizationRole } from "@syncspace/shared";
 
 export class OrganizationService {
   /**

@@ -1,16 +1,15 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { MoreVertical, Search } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 import { useState } from "react";
 
-import { motion } from "framer-motion";
-import { MoreVertical, Search } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-
 import { Card } from "../ui/card";
 import { Progress } from "../ui/progress";
+
+import { cn } from "@/lib/utils";
 
 interface Project {
   id: string;

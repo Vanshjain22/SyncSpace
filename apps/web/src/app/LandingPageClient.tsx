@@ -1,10 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import * as React from "react";
-import { useEffect, useRef, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useQuery } from "@tanstack/react-query";
 import {
   animate,
@@ -30,14 +26,16 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useEffect, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
-import { type ApiResponse } from "@syncspace/shared";
-
-import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { HelpModal } from "@/components/dashboard/HelpModal";
 import { KeyboardShortcutsModal } from "@/components/dashboard/KeyboardShortcutsModal";
 import { UserDropdownMenu } from "@/components/dashboard/UserDropdownMenu";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

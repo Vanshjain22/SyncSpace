@@ -1,5 +1,3 @@
-import { type CreateColumnInput } from "@syncspace/shared";
-
 import { NotFoundError } from "@/core/errors/HttpErrors";
 import { type AsyncResult, Result } from "@/core/result/Result";
 import {
@@ -7,6 +5,7 @@ import {
   invalidateCacheByColumnId,
 } from "@/infrastructure/cache/cacheInvalidation";
 import { prisma } from "@/infrastructure/database/prismaClient";
+import { type CreateColumnInput } from "@syncspace/shared";
 
 export class ColumnService {
   /**

@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import React, { use, useEffect, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -28,6 +26,8 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import Link from "next/link";
+import React, { use, useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -44,8 +44,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

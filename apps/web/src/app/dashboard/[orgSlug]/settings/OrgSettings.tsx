@@ -1,10 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { use, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type ApiResponse } from "@syncspace/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -30,9 +27,10 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";

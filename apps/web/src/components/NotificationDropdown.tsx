@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
+import { type ApiResponse } from "@syncspace/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, CheckSquare, MessageSquare, UserPlus } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
+import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api-client";
 import { useSocket } from "@/providers/SocketProvider";

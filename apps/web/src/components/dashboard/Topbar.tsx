@@ -1,17 +1,16 @@
 "use client";
 
+import { Menu, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
-import { Menu, Plus, Search } from "lucide-react";
-
-import { NotificationDropdown } from "@/components/NotificationDropdown";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { UserDropdownMenu } from "@/components/dashboard/UserDropdownMenu";
-import { useAuth } from "@/hooks/useAuth";
-
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
+
+import { UserDropdownMenu } from "@/components/dashboard/UserDropdownMenu";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TopbarProps {
   orgSlug?: string;

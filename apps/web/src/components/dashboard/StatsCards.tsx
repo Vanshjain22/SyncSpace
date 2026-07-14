@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import * as React from "react";
-
 import { type Variants, motion } from "framer-motion";
 import { Briefcase, CheckCircle2, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 
 import { Card } from "../ui/card";
 

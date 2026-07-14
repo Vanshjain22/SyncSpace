@@ -1,13 +1,11 @@
 "use client";
 
+import { type ApiResponse } from "@syncspace/shared";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowUpDown, Calendar, ExternalLink, ListTodo, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use, useState } from "react";
-
-import { useQuery } from "@tanstack/react-query";
-import { ArrowUpDown, Calendar, ExternalLink, ListTodo, Search, User } from "lucide-react";
-
-import { type ApiResponse } from "@syncspace/shared";
 
 import { Card } from "@/components/ui/card";
 import { api } from "@/lib/api-client";

@@ -1,9 +1,8 @@
 import { type CookieOptions, type NextFunction, type Request, type Response } from "express";
 
-import { JWT } from "@syncspace/shared";
-
 import { env } from "@/config/env";
 import { UnauthorizedError } from "@/core/errors/HttpErrors";
+import { JWT } from "@syncspace/shared";
 
 import { AuthService } from "./auth.service";
 

@@ -1,6 +1,5 @@
-import { loginSchema, registerSchema } from "@syncspace/shared";
-
 import { validate } from "@/middlewares/validate";
+import { loginSchema, registerSchema } from "@syncspace/shared";
 
 /**
  * Validation middlewares for authentication request bodies.
