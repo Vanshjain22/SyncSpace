@@ -4,7 +4,6 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import http from "http";
-import "module-alias/register";
 import path from "path";
 
 import { env } from "@/config/env";
