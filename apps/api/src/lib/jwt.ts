@@ -27,11 +27,9 @@ export interface JwtRefreshPayload {
  * Transported in the Authorization header as Bearer token.
  */
 export function signAccessToken(userId: string): string {
-  return jwt.sign(
-    { sub: userId, type: "access" },
-    env.JWT_ACCESS_SECRET,
-    { expiresIn: env.JWT_ACCESS_EXPIRES_IN as any },
-  );
+  return jwt.sign({ sub: userId, type: "access" }, env.JWT_ACCESS_SECRET, {
+    expiresIn: env.JWT_ACCESS_EXPIRES_IN as any,
+  });
 }
 
 /**
@@ -39,11 +37,9 @@ export function signAccessToken(userId: string): string {
  * Stored in an httpOnly cookie and persisted in the database.
  */
 export function signRefreshToken(userId: string): string {
-  return jwt.sign(
-    { sub: userId, type: "refresh" },
-    env.JWT_REFRESH_SECRET,
-    { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any },
-  );
+  return jwt.sign({ sub: userId, type: "refresh" }, env.JWT_REFRESH_SECRET, {
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN as any,
+  });
 }
 
 // ─── Token Verification ────────────────────────────────────────────────────────

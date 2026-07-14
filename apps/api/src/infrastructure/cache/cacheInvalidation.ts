@@ -1,7 +1,7 @@
-import { cacheService } from "./cacheService";
-
 import { prisma } from "@/infrastructure/database/prismaClient";
 import { logger } from "@/infrastructure/logger";
+
+import { cacheService } from "./cacheService";
 
 /**
  * Invalidate project board and analytics caches by board ID.

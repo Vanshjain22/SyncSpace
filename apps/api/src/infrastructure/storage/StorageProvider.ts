@@ -1,8 +1,7 @@
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
 import path from "path";
-
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { v2 as cloudinary } from "cloudinary";
 
 import { env } from "@/config/env";
 import { logger } from "@/infrastructure/logger";
@@ -49,7 +48,10 @@ export class StorageProvider {
    * Upload a file buffer to AWS S3, Cloudinary, or save it locally.
    * Returns the URL of the uploaded asset and a unique key for deletion.
    */
-  async upload(file: Express.Multer.File, folder = "attachments"): Promise<{ url: string; key: string }> {
+  async upload(
+    file: Express.Multer.File,
+    folder = "attachments",
+  ): Promise<{ url: string; key: string }> {
     if (isS3Configured && s3Client) {
       const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}${path.extname(file.originalname)}`;
       const key = `${folder}/${uniqueName}`;
@@ -80,7 +82,7 @@ export class StorageProvider {
               url: result.secure_url,
               key: result.public_id,
             });
-          }
+          },
         );
         uploadStream.end(file.buffer);
       });
@@ -90,9 +92,9 @@ export class StorageProvider {
     await fs.mkdir(StorageProvider.UPLOAD_DIR, { recursive: true });
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}${path.extname(file.originalname)}`;
     const filePath = path.join(StorageProvider.UPLOAD_DIR, uniqueName);
-    
+
     await fs.writeFile(filePath, file.buffer);
-    
+
     // Build a local absolute URL
     const url = `http://localhost:${env.PORT}/uploads/${uniqueName}`;
     return {
@@ -125,11 +127,14 @@ export class StorageProvider {
     if (isCloudinaryConfigured && url.includes("/upload/")) {
       // Extract Cloudinary public ID from URL
       const parts = url.split("/upload/");
-      if (parts.length < 2) {return;}
+      if (parts.length < 2) {
+        return;
+      }
       const pathAfterUpload = parts[1]!;
       const pathWithoutVersion = pathAfterUpload.replace(/^v\d+\//, "");
       const lastDotIndex = pathWithoutVersion.lastIndexOf(".");
-      const key = lastDotIndex === -1 ? pathWithoutVersion : pathWithoutVersion.substring(0, lastDotIndex);
+      const key =
+        lastDotIndex === -1 ? pathWithoutVersion : pathWithoutVersion.substring(0, lastDotIndex);
 
       await new Promise<void>((resolve, reject) => {
         cloudinary.uploader.destroy(key, (error) => {
@@ -146,7 +151,9 @@ export class StorageProvider {
     // Fallback: Local Storage filename extraction
     if (url.includes("/uploads/")) {
       const parts = url.split("/uploads/");
-      if (parts.length < 2) {return;}
+      if (parts.length < 2) {
+        return;
+      }
       const key = parts[1]!;
       const filePath = path.join(StorageProvider.UPLOAD_DIR, key);
       try {

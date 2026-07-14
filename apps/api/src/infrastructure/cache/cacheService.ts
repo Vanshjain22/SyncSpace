@@ -1,6 +1,6 @@
-import { redis } from "./redisClient";
-
 import { logger } from "@/infrastructure/logger";
+
+import { redis } from "./redisClient";
 
 export class CacheService {
   private defaultTtl = 3600; // 1 hour default TTL in seconds

@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import { getProjectMetrics, getOrgDashboardMetrics } from "./analytics.controller";
-
 import { authenticate } from "@/middlewares/authenticate";
 import { authorize } from "@/middlewares/authorize";
+
+import { getOrgDashboardMetrics, getProjectMetrics } from "./analytics.controller";
 
 const router = Router();
 

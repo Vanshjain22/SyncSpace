@@ -1,3 +1,5 @@
+import "./registerAliases";
+
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -16,8 +18,6 @@ import { notFoundHandler } from "@/middlewares/notFound";
 import { globalRateLimiter } from "@/middlewares/rateLimiter";
 import { requestLogger } from "@/middlewares/requestLogger";
 import { apiRouter } from "@/routes/index";
-
-import "./registerAliases";
 
 // ─── App Bootstrap ────────────────────────────────────────────────────────────
 

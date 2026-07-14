@@ -20,7 +20,7 @@ export function errorHandler(
   req: Request,
   res: Response,
   // Express requires the 4th parameter even if unused — do not remove
-   
+
   _next: NextFunction,
 ): void {
   // ─── Zod Validation Errors ──────────────────────────────────────────────────
@@ -80,7 +80,9 @@ export function errorHandler(
       message:
         env.NODE_ENV === "production"
           ? "An unexpected error occurred"
-          : (err instanceof Error ? err.message : "Unknown error"),
+          : err instanceof Error
+            ? err.message
+            : "Unknown error",
     },
     statusCode: 500,
   });

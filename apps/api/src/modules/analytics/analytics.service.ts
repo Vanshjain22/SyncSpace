@@ -1,5 +1,5 @@
 import { NotFoundError } from "@/core/errors/HttpErrors";
-import { Result, type AsyncResult } from "@/core/result/Result";
+import { type AsyncResult, Result } from "@/core/result/Result";
 import { cacheService } from "@/infrastructure/cache/cacheService";
 import { prisma } from "@/infrastructure/database/prismaClient";
 
@@ -119,7 +119,8 @@ export class AnalyticsService {
       where: { columnId: { in: columnIds }, status: "DONE" },
     });
 
-    const productivityScore = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+    const productivityScore =
+      totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
 
     const upcomingDeadlines = await prisma.task.findMany({
       where: {

@@ -1,12 +1,16 @@
 import { type NextFunction, type Request, type Response } from "express";
 
-import { AnalyticsService } from "./analytics.service";
-
 import { UnauthorizedError } from "@/core/errors/HttpErrors";
+
+import { AnalyticsService } from "./analytics.service";
 
 const analyticsService = new AnalyticsService();
 
-export async function getProjectMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getProjectMetrics(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     if (!req.user) {
       next(new UnauthorizedError());
@@ -26,7 +30,11 @@ export async function getProjectMetrics(req: Request, res: Response, next: NextF
   }
 }
 
-export async function getOrgDashboardMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function getOrgDashboardMetrics(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
   try {
     if (!req.user) {
       next(new UnauthorizedError());

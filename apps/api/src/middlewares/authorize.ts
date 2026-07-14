@@ -1,7 +1,8 @@
-import { type OrganizationRole, ROLE_HIERARCHY } from "@syncspace/shared";
 import { type NextFunction, type Request, type Response } from "express";
 
-import { ForbiddenError, UnauthorizedError, NotFoundError } from "@/core/errors/HttpErrors";
+import { type OrganizationRole, ROLE_HIERARCHY } from "@syncspace/shared";
+
+import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/core/errors/HttpErrors";
 import { prisma } from "@/infrastructure/database/prismaClient";
 
 /**
@@ -18,11 +19,7 @@ import { prisma } from "@/infrastructure/database/prismaClient";
  *   router.patch("/:id", authenticate, authorize("OWNER", "ADMIN"), updateOrgHandler)
  */
 export function authorize(...requiredRoles: OrganizationRole[]) {
-  return async (
-    req: Request,
-    _res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       if (!req.user) {
         next(new UnauthorizedError("Authentication is required to access this resource"));
@@ -38,8 +35,10 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
       }
 
       // Resolve from /projects/:id routes or route parameters containing projectId
-      const projectId = req.params.projectId || (req.baseUrl.includes("/projects") && req.params.id ? req.params.id : undefined);
-      
+      const projectId =
+        req.params.projectId ||
+        (req.baseUrl.includes("/projects") && req.params.id ? req.params.id : undefined);
+
       if (!orgId && projectId) {
         const project = await prisma.project.findUnique({
           where: { id: projectId },
@@ -91,7 +90,11 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
       if (!orgId && req.baseUrl.includes("/tasks") && req.params.id) {
         const task = await prisma.task.findUnique({
           where: { id: req.params.id },
-          select: { column: { select: { board: { select: { project: { select: { organizationId: true } } } } } } },
+          select: {
+            column: {
+              select: { board: { select: { project: { select: { organizationId: true } } } } },
+            },
+          },
         });
         if (task) {
           orgId = task.column.board.project.organizationId;
@@ -102,7 +105,11 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
       if (!orgId && req.params.taskId) {
         const task = await prisma.task.findUnique({
           where: { id: req.params.taskId },
-          select: { column: { select: { board: { select: { project: { select: { organizationId: true } } } } } } },
+          select: {
+            column: {
+              select: { board: { select: { project: { select: { organizationId: true } } } } },
+            },
+          },
         });
         if (task) {
           orgId = task.column.board.project.organizationId;
@@ -113,7 +120,15 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
       if (!orgId && req.baseUrl.includes("/comments") && req.params.id) {
         const comment = await prisma.comment.findUnique({
           where: { id: req.params.id },
-          select: { task: { select: { column: { select: { board: { select: { project: { select: { organizationId: true } } } } } } } } },
+          select: {
+            task: {
+              select: {
+                column: {
+                  select: { board: { select: { project: { select: { organizationId: true } } } } },
+                },
+              },
+            },
+          },
         });
         if (comment) {
           orgId = comment.task.column.board.project.organizationId;
@@ -135,7 +150,11 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
       if (!orgId && req.body.taskId) {
         const task = await prisma.task.findUnique({
           where: { id: req.body.taskId },
-          select: { column: { select: { board: { select: { project: { select: { organizationId: true } } } } } } },
+          select: {
+            column: {
+              select: { board: { select: { project: { select: { organizationId: true } } } } },
+            },
+          },
         });
         if (task) {
           orgId = task.column.board.project.organizationId;
@@ -184,7 +203,7 @@ export function authorize(...requiredRoles: OrganizationRole[]) {
 
       // Compare using role hierarchy weights
       const userWeight = ROLE_HIERARCHY[membership.role];
-      
+
       const isAuthorized = requiredRoles.some((requiredRole) => {
         const requiredWeight = ROLE_HIERARCHY[requiredRole];
         return userWeight >= requiredWeight;

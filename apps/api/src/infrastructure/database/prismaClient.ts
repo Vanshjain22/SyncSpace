@@ -13,7 +13,6 @@ import { logger } from "@/infrastructure/logger";
  */
 
 declare global {
-   
   var __prisma: PrismaClient | undefined;
 }
 
@@ -26,9 +25,7 @@ function createPrismaClient(): PrismaClient {
             { level: "error", emit: "event" },
             { level: "warn", emit: "event" },
           ]
-        : [
-            { level: "error", emit: "event" },
-          ],
+        : [{ level: "error", emit: "event" }],
   });
 
   // Log slow queries in development

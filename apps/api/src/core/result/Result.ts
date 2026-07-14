@@ -17,8 +17,7 @@
  */
 
 type ResultState<T, E> =
-  | { readonly _tag: "Ok"; readonly value: T }
-  | { readonly _tag: "Err"; readonly error: E };
+  { readonly _tag: "Ok"; readonly value: T } | { readonly _tag: "Err"; readonly error: E };
 
 export class Result<T, E extends Error = Error> {
   private readonly state: ResultState<T, E>;
