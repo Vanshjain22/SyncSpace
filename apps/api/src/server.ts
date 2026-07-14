@@ -8,6 +8,7 @@ import helmet from "helmet";
 import http from "http";
 import path from "path";
 
+import { isOriginAllowed } from "@/config/cors";
 import { env } from "@/config/env";
 import { disconnectRedis } from "@/infrastructure/cache/redisClient";
 import { disconnectDatabase } from "@/infrastructure/database/prismaClient";
@@ -34,7 +35,13 @@ app.use(
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-request-id"],

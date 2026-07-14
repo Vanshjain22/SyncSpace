@@ -1,7 +1,7 @@
 import type http from "http";
 import { Server } from "socket.io";
 
-import { env } from "@/config/env";
+import { isOriginAllowed } from "@/config/cors";
 import { prisma } from "@/infrastructure/database/prismaClient";
 import { logger } from "@/infrastructure/logger";
 import { verifyAccessToken } from "@/lib/jwt";
@@ -14,7 +14,13 @@ let io: Server | null = null;
 export function initSocketServer(server: http.Server): Server {
   io = new Server(server, {
     cors: {
-      origin: env.FRONTEND_URL,
+      origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
       credentials: true,
       methods: ["GET", "POST"],
     },
