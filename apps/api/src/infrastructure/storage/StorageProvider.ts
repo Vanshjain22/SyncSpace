@@ -12,6 +12,12 @@ const isCloudinaryConfigured = !!(
   env.CLOUDINARY_API_SECRET
 );
 
+console.log({
+  key: env.AWS_ACCESS_KEY_ID,
+  bucket: env.AWS_S3_BUCKET,
+  region: env.AWS_REGION,
+});
+
 const isS3Configured = !!(
   env.AWS_ACCESS_KEY_ID &&
   env.AWS_SECRET_ACCESS_KEY &&
