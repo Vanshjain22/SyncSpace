@@ -12,7 +12,13 @@ import { useAuthStore } from "@/stores/auth.store";
  * - Provides a consistent error shape
  */
 
-const BASE_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:4000/api";
+const BASE_URL =
+  process.env["NEXT_PUBLIC_API_URL"] ??
+  (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:4000/api");
+
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  console.info("SyncSpace API URL:", BASE_URL);
+}
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
